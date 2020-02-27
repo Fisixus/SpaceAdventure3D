@@ -7,90 +7,115 @@ using namespace Angel;
 using namespace std;
 typedef vec4 point4;
 typedef vec4 color4;
-const GLint width = 500;
-const GLint height = 500;
-vector<point4> sphere;
-vector<point4> normal;
-point4 color = { 1.0,0.0,0.0,1.0 };
-const double PI = 3.141592653589793238463;
+const float PI = 3.141592653589793238463;
+enum { ViewMode1 = 0, ViewMode2 = 1, ViewMode3 = 2, ViewMode4 = 3 };
+int ViewMode = ViewMode1;
+
+const GLint width = 512;
+const GLint height = 512;
+const GLfloat material_shininess = 1000.0f;
 
 point4 light_position(2.0, 3.0, 2.0, 1.0); //wrt camera
 color4 light_ambient(0.2, 0.2, 0.2, 1.0);
 color4 light_diffuse(1.0, 1.0, 1.0, 1.0);
 color4 light_specular(1.0, 1.0, 1.0, 1.0);
 
-vector<point4> ambient_products;
-vector<point4> diffuse_products;
-vector<point4> specular_products;
+//For planets and space station
+GLint sectorCount = 100;
+GLint stackCount = 100;
+
+vector<point4> locations;
+vector<point4> points;
+vector<point4> normals;
+vector<color4> ambient_products;
+vector<color4> diffuse_products;
+vector<color4> specular_products;
+
+GLint planetIndex = 0;
+GLint torusIndex = 0;
+GLint tetrahedronIndex = 0;
+
+point4 planet_coords[10] = { {0, 0, -5, 1},
+{2, 3, -5, 1},
+{30, 30, 30, 1},
+{30, 170, 15, 1},
+{80, 110, 25, 1},
+{70, 60, 12, 1},
+{90, 150, 13, 1},
+{120, 80, 17, 1},
+{150, 40, 15, 1},
+{160, 170, 22, 1} };
+
+color4 ambient_color_catalogue[8] = { {0.633, 0.727811, 0.633, 1.0},
+{0.30, 0.30, 0.30, 1.0},
+{1.00, 0.00, 0.00, 1.0},
+{0.00, 1.00, 0.00, 1.0},
+{0.00, 0.00, 1.00, 1.0},
+{1.00, 1.00, 0.00, 1.0},
+//{1.00, 0.00, 1.00, 1.0},
+{0.00, 1.00, 1.00, 1.0},
+{1.00, 1.00, 1.00, 1.0} };
+
+color4 diffuse_colors_catalogue[8] = { {0.07568, 0.61424, 0.07568, 1.0},
+{0.30, 0.30, 0.30, 1.0},
+{1.00, 0.00, 0.00, 1.0},
+{0.00, 1.00, 0.00, 1.0},
+{0.00, 0.00, 1.00, 1.0},
+{1.00, 1.00, 0.00, 1.0},
+//{1.00, 0.00, 1.00, 1.0},
+{0.00, 1.00, 1.00, 1.0},
+{1.00, 0.50, 1.00, 1.0} };
+
+color4 specular_colors_catalogue[8] = { {0.0215, 0.1745, 0.0215, 1.0},
+{0.30, 0.30, 0.30, 1.0},
+{1.00, 0.00, 0.00, 1.0},
+{0.00, 1.00, 0.00, 1.0},
+{0.00, 0.00, 1.00, 1.0},
+{1.00, 1.00, 0.00, 1.0},
+//{1.00, 0.00, 1.00, 1.0},
+{0.00, 1.00, 1.00, 1.0},
+{1.00, 1.00, 1.00, 1.0} };
 
 GLint ModelView, Projection;
 
-void pushColor() {
-	ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
-	diffuse_products.push_back(light_diffuse*vec4(0.9, 0.9, 0.7, 1.0));
-	specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
-}
+
 
 //TRIANGLE_FAN
-void fillSpherePoints() {
-	/*
-	for (int i = 0; i < 360; i = i + 5) {
-		int k = i;
-		for (int j = 0; j < 180; j = j + 1) {
-			k += 30;
-			float lat = PI / 180 * k;
-			float lon = PI / 180 * j;
-			float x = cos(lat)*sin(lon);
-			float y = cos(lon);
-			float z = sin(lon)*sin(lat);
-			point4 point = { x,y,z,1.0 };
-			vec3 normalized = normalize(vec3(x, y, z));
-			normal.push_back(vec4(normalized, 0.0));
-			ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
-			diffuse_products.push_back(light_diffuse*vec4(1.0, 0.61424, 0.07568, 1.0));
-			specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
-			sphere.push_back(point);
-		}
-	}
-	*/
-	/*
-	float sectorCount = 100;
-	float stackCount = 100;
-	float radius = 1.0f;
+void drawPlanet(GLfloat radius, const point4 &location, const color4 &ambient_color,
+			 const color4 &diffuse_color, const color4 &specular_color) {
+
 	float sectorStep = 2 * PI / sectorCount;
 	float stackStep = PI / stackCount;
 	float sectorAngle, stackAngle;
 
 	for (int i = 0; i <= stackCount; ++i)
 	{
-		stackAngle = PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
+		stackAngle = PI / 2 - i * stackStep;       
 		float xy = radius * cosf(stackAngle);
-		float z = radius * sinf(stackAngle);	// r * cos(u);              // r * sin(u)
+		float z = radius * sinf(stackAngle);
 
-		// add (sectorCount+1) vertices per stack
-		// the first and last vertices have same position and normal, but different tex coords
 		for (int j = 0; j <= sectorCount; ++j)
 		{
-			sectorAngle = j * sectorStep;           // starting from 0 to 2pi
+			sectorAngle = j * sectorStep;           
 
-			// vertex position (x, y, z)
 			float x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
 			float y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
 			point4 point = { x,y,z,1.0 };
-			sphere.push_back(point);
-			vec3 normalized = normalize(vec3(x, y, z));
-			normal.push_back(vec4(normalized, 0.0));
-			ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
-			diffuse_products.push_back(light_diffuse*vec4(1.0, 0.61424, 0.07568, 1.0));
-			specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
+			points.push_back(point);
+			vec4 normalized = normalize(vec4(x, y, z, 0.0));
+			normalized.w = 0.0;
+			normals.push_back(normalized);
+			ambient_products.push_back(light_ambient * ambient_color);
+			diffuse_products.push_back(light_diffuse * diffuse_color);
+			specular_products.push_back(light_specular * specular_color);
+			locations.push_back(location);
+			planetIndex++;
 		}
 	}
-	*/
-
 
 }
 //TRIANGLE_STRIP
-void drawTorus() {
+void drawTorusY() {
 
 	float innerR = 0.1;
 	float outerR = 0.8;
@@ -117,26 +142,30 @@ void drawTorus() {
 				//For innerCircle
 				float sx = cos(innerAngle*twopi / numt)*(-sin(outerAngle*twopi / numc));
 				float sy = sin(innerAngle*twopi / numt)*(-sin(outerAngle*twopi / numc));
-				float sz = cos(outerAngle*twopi / numc);				/* normal is cross-product of tangents */
+				float sz = cos(outerAngle*twopi / numc);
+
+				/* normal is cross-product of tangents */
 				float nx = tangentY * sz - tangentZ * sy;
 				float ny = tangentZ * sx - tangentX * sz;
-				float nz = tangentX * sy - tangentY * sx;
+				float nz = tangentX * sy - tangentY * sx;
+
 
 
 				point4 point = { x,y,z,1.0 };
-				sphere.push_back(point);
+				points.push_back(point);
 				vec3 normalized = normalize(vec3(nx, ny, nz));
-				normal.push_back(vec4(normalized, 0.0));
+				normals.push_back(vec4(normalized, 0.0));
 				ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
 				diffuse_products.push_back(light_diffuse*vec4(1.0, 0.61424, 0.07568, 1.0));
 				specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
+				torusIndex++;
 			}
 		}
 	}
 
 }
 
-void drawTorus2() {
+void drawTorusZ() {
 
 	float innerR = 0.1;
 	float outerR = 1.0;
@@ -163,10 +192,13 @@ void drawTorus2() {
 				//For innerCircle
 				float sx = cos(innerAngle*twopi / numt)*(-sin(outerAngle*twopi / numc));
 				float sy = sin(innerAngle*twopi / numt)*(-sin(outerAngle*twopi / numc));
-				float sz = cos(outerAngle*twopi / numc);				/* normal is cross-product of tangents */
+				float sz = cos(outerAngle*twopi / numc);
+
+				/* normal is cross-product of tangents */
 				float nx = tangentY * sz - tangentZ * sy;
 				float ny = tangentZ * sx - tangentX * sz;
-				float nz = tangentX * sy - tangentY * sx;				/*
+				float nz = tangentX * sy - tangentY * sx;
+				/*
 				mat4 rX = mat4(1.0, 0.0, 0.0, 0.0,
 					0.0, cos(90*PI/180), -sin(90 * PI / 180), 0.0,
 					0.0, sin(90 * PI / 180), cos(90 * PI / 180), 0.0,
@@ -182,9 +214,9 @@ void drawTorus2() {
 					-sin(90 * PI / 180), 0.0, cos(90 * PI / 180), 0.0,
 					0.0, 0.0, 0.0, 1.0);
 				point4 point = rY *  point4(x,y,z,1.0) ;
-				sphere.push_back(point);
+				points.push_back(point);
 				vec4 normalized = normalize(rY * vec4(nx, ny, nz, 0.0));
-				normal.push_back(normalized);
+				normals.push_back(normalized);
 				ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
 				diffuse_products.push_back(light_diffuse*vec4(1.0, 0.61424, 0.07568, 1.0));
 				specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
@@ -194,23 +226,33 @@ void drawTorus2() {
 
 }
 
+void pushColor() {
+	ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
+	diffuse_products.push_back(light_diffuse*vec4(0.9, 0.9, 0.7, 1.0));
+	specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
+}
+
 void triangle(const point4 &a, const point4 &b, const point4 &c) {
-	sphere.push_back(a);
+	points.push_back(a);
 	pushColor();
 	vec4 norm = normalize(cross(b - a, c - a));
 	norm.w = 0.0;
-	normal.push_back(norm);
-	sphere.push_back(b);
+	normals.push_back(norm);
+	tetrahedronIndex++;
+	points.push_back(b);
 	norm = normalize(cross(a - c, b - c));
 	norm.w = 0.0;
-	normal.push_back(norm);
+	normals.push_back(norm);
 	pushColor();
-	sphere.push_back(c);
+	tetrahedronIndex++;
+	points.push_back(c);
 	norm = normalize(cross(a - b, c - b));
 	norm.w = 0.0;
-	normal.push_back(norm);
+	normals.push_back(norm);
 	pushColor();
+	tetrahedronIndex++;
 }
+
 //TRIANGLE_STRIP
 void drawTetraHedron() {
 	triangle(point4(-0.4 / 3, 0.0 / 3, 1.3, 1.0), point4(0.0, 0.0, 1.8, 1.0), point4(0.4 / 3, 0.0, 1.3, 1.0));
@@ -219,11 +261,22 @@ void drawTetraHedron() {
 	triangle(point4(0.1 / 3, 0.5 / 3, 1.6, 1.0), point4(-0.4 / 3, 0.0, 1.3, 1.0), point4(0.4 / 3, 0.0, 1.3, 1.0));
 }
 
-void init() {
-	drawTorus();
+
+void drawPlanets() {
+	drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[0], diffuse_colors_catalogue[0], specular_colors_catalogue[0]);
+	drawPlanet(1.5, planet_coords[1], ambient_color_catalogue[1], diffuse_colors_catalogue[2], specular_colors_catalogue[0]);
+}
+
+void drawSpaceship() {
+	drawTorusY();
+	drawTorusZ();
 	drawTetraHedron();
-	drawTorus2();
-	//fillSpherePoints();
+}
+
+void init() {
+	drawPlanets();
+	drawSpaceship();
+
 	// Create a vertex array object
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
@@ -234,15 +287,17 @@ void init() {
 	glGenBuffers(1, &buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, buffer);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(point4)*sphere.size() + sizeof(point4)*normal.size() + sizeof(point4)*ambient_products.size()
-		+ sizeof(point4)*diffuse_products.size() + sizeof(point4)*specular_products.size(), NULL, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(point4)*sphere.size(), sphere.data());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*sphere.size(), sizeof(point4)*normal.size(), normal.data());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*sphere.size() + sizeof(point4)*normal.size(), sizeof(point4)*ambient_products.size(), ambient_products.data());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*sphere.size() + sizeof(point4)*normal.size() + sizeof(point4)*ambient_products.size()
+	glBufferData(GL_ARRAY_BUFFER, sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size()
+		+ sizeof(point4)*diffuse_products.size() + sizeof(point4)*specular_products.size() + sizeof(point4) * locations.size(), NULL, GL_STATIC_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(point4)*points.size(), points.data());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*points.size(), sizeof(point4)*normals.size(), normals.data());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*points.size() + sizeof(point4)*normals.size(), sizeof(point4)*ambient_products.size(), ambient_products.data());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size()
 		, sizeof(point4)*diffuse_products.size(), diffuse_products.data());
-	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*sphere.size() + sizeof(point4)*normal.size() + sizeof(point4)*ambient_products.size()
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size()
 		+ sizeof(point4)*diffuse_products.size(), sizeof(point4)*specular_products.size(), specular_products.data());
+	glBufferSubData(GL_ARRAY_BUFFER, sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size()
+		+ sizeof(point4)*diffuse_products.size() + sizeof(point4)*specular_products.size(), sizeof(point4)*locations.size(),locations.data());
 
 	// Load shaders and use the resulting shader program
 	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
@@ -257,24 +312,28 @@ void init() {
 	GLuint vNormal = glGetAttribLocation(program, "vNormal");
 	glEnableVertexAttribArray(vNormal);
 	glVertexAttribPointer(vNormal, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(point4)*sphere.size()));
+		BUFFER_OFFSET(sizeof(point4)*points.size()));
 
 	GLuint AmbientProduct = glGetAttribLocation(program, "AmbientProduct");
 	glEnableVertexAttribArray(AmbientProduct);
 	glVertexAttribPointer(AmbientProduct, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(point4)*sphere.size() + sizeof(point4)*normal.size()));
+		BUFFER_OFFSET(sizeof(point4)*points.size() + sizeof(point4)*normals.size()));
 
 	GLuint DiffuseProduct = glGetAttribLocation(program, "DiffuseProduct");
 	glEnableVertexAttribArray(DiffuseProduct);
 	glVertexAttribPointer(DiffuseProduct, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(point4)*sphere.size() + sizeof(point4)*normal.size() + sizeof(point4)*ambient_products.size()));
+		BUFFER_OFFSET(sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size()));
 
 	GLuint SpecularProduct = glGetAttribLocation(program, "SpecularProduct");
 	glEnableVertexAttribArray(SpecularProduct);
 	glVertexAttribPointer(SpecularProduct, 4, GL_FLOAT, GL_FALSE, 0,
-		BUFFER_OFFSET(sizeof(point4)*sphere.size() + sizeof(point4)*normal.size() + sizeof(point4)*ambient_products.size() + sizeof(point4)*diffuse_products.size()));
+		BUFFER_OFFSET(sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size() + sizeof(point4)*diffuse_products.size()));
 
-	float material_shininess = 960.8;
+	GLuint transformLoc = glGetAttribLocation(program, "transformLoc");
+	glEnableVertexAttribArray(transformLoc);
+	glVertexAttribPointer(transformLoc, 4, GL_FLOAT, GL_FALSE, 0,
+		BUFFER_OFFSET(sizeof(point4)*points.size() + sizeof(point4)*normals.size() + sizeof(point4)*ambient_products.size() + sizeof(point4)*diffuse_products.size() + sizeof(point4)*specular_products.size()));
+	
 	glUniform1f(glGetUniformLocation(program, "Shininess"), material_shininess);
 	glUniform4fv(glGetUniformLocation(program, "LightPosition"), 1, light_position);
 
@@ -282,10 +341,10 @@ void init() {
 	Projection = glGetUniformLocation(program, "Projection");
 
 	glEnable(GL_DEPTH_TEST);
-	glClearColor(1.0, 1.0, 1.0, 1.0);
+	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-void myDisplay(void) {
+void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	point4 at(0.0, 0.0, 0.0, 1.0);
 	point4 eye(0.0, 0.0, 3.0, 1.0);
@@ -293,27 +352,57 @@ void myDisplay(void) {
 
 	mat4 model_view = LookAt(eye, at, up);
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, sphere.size());
+	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex/2);
+	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 2, planetIndex / 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + torusIndex, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + torusIndex + torusIndex, 12);
+
 	glutSwapBuffers();
 }
-void myReshape(GLsizei w, GLsizei h) {
+
+void reshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
 	mat4 projection = Perspective(60.0, aspect, 0.5, 20.0);
 	glUniformMatrix4fv(Projection, 1, GL_TRUE, projection);
 }
+
+void keyboard(unsigned char key, int x, int y)
+{
+	switch (key) {
+	case 033: // Escape Key
+	case 'q': case 'Q':
+		exit(EXIT_SUCCESS);
+		break;
+	case 'c': case 'C':
+		ViewMode = ViewMode1;
+		break;
+	case 's': case 'S':
+		ViewMode = ViewMode2;
+		break;
+	case 't': case 'T':
+		ViewMode = ViewMode3;
+		break;
+	case 'w': case 'W':
+		ViewMode = ViewMode4;
+		break;
+	}
+}
+
 int main(int argc, char **argv) {
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
-	glutInitWindowSize(800, 800);
+	glutInitWindowSize(width, height);
 	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Sphere");
+	glutCreateWindow("Space Adventure 3D");
 	glewExperimental = GL_TRUE;
 	glewInit();
 	init();
-	glutDisplayFunc(myDisplay);
-	glutReshapeFunc(myReshape);
+	glutKeyboardFunc(keyboard);
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
 	glutMainLoop();
 	return 0;
 }

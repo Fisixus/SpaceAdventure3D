@@ -6,6 +6,7 @@ in vec4 vNormal;
 in vec4 AmbientProduct;
 in vec4 DiffuseProduct;
 in vec4 SpecularProduct;
+in vec4 transformLoc;
 out vec4 color;
 
 uniform mat4 ModelView;
@@ -37,8 +38,13 @@ void main()
     if( dot(L, N) < 0.0 ) {
 	specular = vec4(0.0, 0.0, 0.0, 1.0);
     } 
+
+    mat4 tXYZ = mat4(1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    transformLoc.x, transformLoc.y, transformLoc.z, 1.0);
     
-    gl_Position = Projection * ModelView * vPosition;
+    gl_Position = Projection * ModelView * tXYZ * vPosition;
 
     color = ambient + diffuse + specular;
     color.a = 1.0;
