@@ -11,11 +11,11 @@ const float PI = 3.141592653589793238463;
 enum { ViewMode1 = 0, ViewMode2 = 1, ViewMode3 = 2, ViewMode4 = 3 };
 int ViewMode = ViewMode1;
 
-const GLint width = 512;
-const GLint height = 512;
+const GLint width = 1024;
+const GLint height = 1024;
 const GLfloat material_shininess = 1000.0f;
 
-point4 light_position(2.0, 3.0, 2.0, 1.0); //wrt camera
+point4 light_position(2.0, 3.0, 200.0, 1.0); //wrt camera
 color4 light_ambient(0.2, 0.2, 0.2, 1.0);
 color4 light_diffuse(1.0, 1.0, 1.0, 1.0);
 color4 light_specular(1.0, 1.0, 1.0, 1.0);
@@ -35,16 +35,19 @@ GLint planetIndex = 0;
 GLint torusIndex = 0;
 GLint tetrahedronIndex = 0;
 
-point4 planet_coords[10] = { {0, 0, -5, 1},
-{2, 3, -5, 1},
+point4 spaceship_coord = { 105.0, 15.0, 0.0, 1.0 };
+point4 station_coord = { 100.0, 10.0, 10.0, 1.0 };
+
+point4 planet_coords[10] = { {160, 30, 30, 1},
+{2, 3, 15, 1},
 {30, 30, 30, 1},
-{30, 170, 15, 1},
-{80, 110, 25, 1},
-{70, 60, 12, 1},
-{90, 150, 13, 1},
-{120, 80, 17, 1},
-{150, 40, 15, 1},
-{160, 170, 22, 1} };
+{30, 15, 170, 1},
+{80, 25, 110, 1},
+{70, 12, 60, 1},
+{90, 13, 150, 1},
+{120, 17, 80, 1},
+{150, 15, 40, 1},
+{160, 22, 170, 1} };
 
 color4 ambient_color_catalogue[8] = { {0.633, 0.727811, 0.633, 1.0},
 {0.30, 0.30, 0.30, 1.0},
@@ -59,7 +62,7 @@ color4 ambient_color_catalogue[8] = { {0.633, 0.727811, 0.633, 1.0},
 color4 diffuse_colors_catalogue[8] = { {0.07568, 0.61424, 0.07568, 1.0},
 {0.30, 0.30, 0.30, 1.0},
 {1.00, 0.00, 0.00, 1.0},
-{0.00, 1.00, 0.00, 1.0},
+{1.0, 0.5, 0.0, 1.0},
 {0.00, 0.00, 1.00, 1.0},
 {1.00, 1.00, 0.00, 1.0},
 //{1.00, 0.00, 1.00, 1.0},
@@ -69,12 +72,12 @@ color4 diffuse_colors_catalogue[8] = { {0.07568, 0.61424, 0.07568, 1.0},
 color4 specular_colors_catalogue[8] = { {0.0215, 0.1745, 0.0215, 1.0},
 {0.30, 0.30, 0.30, 1.0},
 {1.00, 0.00, 0.00, 1.0},
-{0.00, 1.00, 0.00, 1.0},
+{1.00, 1.00, 1.00, 1.0},
 {0.00, 0.00, 1.00, 1.0},
 {1.00, 1.00, 0.00, 1.0},
 //{1.00, 0.00, 1.00, 1.0},
 {0.00, 1.00, 1.00, 1.0},
-{1.00, 1.00, 1.00, 1.0} };
+{0.00, 0.00, 0.00, 0.0} };
 
 GLint ModelView, Projection;
 
@@ -198,17 +201,7 @@ void drawTorusZ() {
 				float nx = tangentY * sz - tangentZ * sy;
 				float ny = tangentZ * sx - tangentX * sz;
 				float nz = tangentX * sy - tangentY * sx;
-				/*
-				mat4 rX = mat4(1.0, 0.0, 0.0, 0.0,
-					0.0, cos(90*PI/180), -sin(90 * PI / 180), 0.0,
-					0.0, sin(90 * PI / 180), cos(90 * PI / 180), 0.0,
-					0.0, 0.0, 0.0, 1.0);
 
-				mat4 rZ = mat4(cos(90 * PI / 180), -sin(90 * PI / 180), 0.0, 0.0,
-					sin(90 * PI / 180), cos(90 * PI / 180), 0.0, 0.0,
-					0.0, 0.0, 1.0, 0.0,
-					0.0, 0.0, 0.0, 1.0);
-*/
 				mat4 rY = mat4(cos(90 * PI / 180), 0.0, sin(90 * PI / 180), 0.0,
 					0.0, 1.0, 0.0, 0.0,
 					-sin(90 * PI / 180), 0.0, cos(90 * PI / 180), 0.0,
@@ -263,8 +256,23 @@ void drawTetraHedron() {
 
 
 void drawPlanets() {
-	drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[0], diffuse_colors_catalogue[0], specular_colors_catalogue[0]);
-	drawPlanet(1.5, planet_coords[1], ambient_color_catalogue[1], diffuse_colors_catalogue[2], specular_colors_catalogue[0]);
+	///PURPLE
+	drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[1], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
+	///ORANGE
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[7], diffuse_colors_catalogue[3], specular_colors_catalogue[3]);
+	///PINK
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[2], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
+	///YELLOW
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[6], diffuse_colors_catalogue[5], specular_colors_catalogue[4]);
+	///LIGHT BLUE
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[0], diffuse_colors_catalogue[6], specular_colors_catalogue[5]);
+	///BLUE
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[0], diffuse_colors_catalogue[4], specular_colors_catalogue[5]);
+	///GREEN
+	//drawPlanet(1.0, planet_coords[0], ambient_color_catalogue[0], diffuse_colors_catalogue[0], specular_colors_catalogue[0]);
+	///RED
+	//drawPlanet(1.5, planet_coords[1], ambient_color_catalogue[1], diffuse_colors_catalogue[2], specular_colors_catalogue[0]);
+
 }
 
 void drawSpaceship() {
@@ -346,17 +354,17 @@ void init() {
 
 void display(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	point4 at(0.0, 0.0, 0.0, 1.0);
-	point4 eye(0.0, 0.0, 3.0, 1.0);
+	point4 at(160.0, 30.0, 0.0, 1.0);
+	point4 eye(160.0, 30.0, 35.0, 1.0);
 	vec4 up(0.0, 1.0, 0.0, 0.0);
 
 	mat4 model_view = LookAt(eye, at, up);
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex/2);
-	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 2, planetIndex / 2);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex, torusIndex);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + torusIndex, torusIndex);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + torusIndex + torusIndex, 12);
+	//glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 2, planetIndex / 2);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex/2, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex/2 + torusIndex, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex/2 + torusIndex + torusIndex, 12);
 
 	glutSwapBuffers();
 }
@@ -364,7 +372,7 @@ void display(void) {
 void reshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
-	mat4 projection = Perspective(60.0, aspect, 0.5, 20.0);
+	mat4 projection = Perspective(60.0, aspect, 0.5, 60.0);
 	glUniformMatrix4fv(Projection, 1, GL_TRUE, projection);
 }
 
