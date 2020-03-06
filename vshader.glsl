@@ -8,6 +8,7 @@ in vec4 DiffuseProduct;
 in vec4 SpecularProduct;
 out vec4 color;
 
+uniform vec3 Theta;
 uniform vec4 TranslatePlanets;
 uniform mat4 ModelView;
 uniform mat4 Projection;
@@ -39,12 +40,31 @@ void main()
 	specular = vec4(0.0, 0.0, 0.0, 1.0);
     } 
 
+    vec3 angles = radians( Theta );
+    vec3 c = cos( angles );
+    vec3 s = sin( angles );
+
+    mat4 rX = mat4( 1.0,  0.0,  0.0, 0.0,
+		    0.0,  c.x,  s.x, 0.0,
+		    0.0, -s.x,  c.x, 0.0,
+		    0.0,  0.0,  0.0, 1.0 );
+
+    mat4 rY = mat4( c.y, 0.0, -s.y, 0.0,
+		    0.0, 1.0,  0.0, 0.0,
+		    s.y, 0.0,  c.y, 0.0,
+		    0.0, 0.0,  0.0, 1.0 );
+			
+	mat4 rZ = mat4( c.z, s.z, 0.0, 0.0,
+		-s.z,  c.z, 0.0, 0.0,
+		0.0,  0.0, 1.0, 0.0,
+		0.0,  0.0, 0.0, 1.0 );
+
     mat4 tXYZ = mat4(1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
     TranslatePlanets.x, TranslatePlanets.y, TranslatePlanets.z, 1.0);
     
-    gl_Position = Projection * ModelView * tXYZ * vPosition;
+    gl_Position = Projection * ModelView * tXYZ * rX * rY * rZ * vPosition;
 
     color = ambient + diffuse + specular;
     color.a = 1.0;

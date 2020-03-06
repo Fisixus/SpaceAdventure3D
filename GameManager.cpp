@@ -10,6 +10,7 @@ typedef vec4 color4;
 const float PI = 3.141592653589793238463;
 enum { ViewMode1 = 0, ViewMode2 = 1, ViewMode3 = 2, ViewMode4 = 3 };
 int ViewMode = ViewMode1;
+#define LARGE_Y 300;
 
 const GLint width = 1440;
 const GLint height = 900;
@@ -27,6 +28,12 @@ vec4 up(0.0, 1.0, 0.0, 0.0);
 //For planets and space station
 GLint sectorCount = 100;
 GLint stackCount = 100;
+GLfloat spaceshipSpeed = 2.0f;
+vec4 velocityVector(0.0, 0.0, -1.0, 0.0);
+
+GLfloat rotateAngularSpeed = 2.0f;
+
+GLfloat rotatingDegreeSpaceStation = 0.0;
 
 vector<point4> points;
 vector<point4> normals;
@@ -37,19 +44,21 @@ vector<color4> specular_products;
 GLint planetIndex = 0;
 GLint torusIndex = 0;
 GLint tetrahedronIndex = 0;
+GLint spacestationIndex = 0;
 
 point4 spaceship_coord = { 105.0, 15.0, 0.0, 1.0 };
 point4 station_coord = { 100.0, 10.0, -10.0, 1.0 };
+point4 station_front = { 0.5, 0.5, 0.5, 1.0 };
 
 point4 planet_coords[8] = { 
-{30, 30, -150, 1},
+{30, 30, -30, 1},
 {30, 15, -170, 1},
 {80, 25, -110, 1},
 {70, 12, -60, 1},
 {90, 13, -150, 1},
 {120, 17, -80, 1},
 {150, 15, -40, 1},
-{140, 30, -170, 1} };
+{160, 22, -170, 1} };
 
 color4 ambient_color_catalogue[8] = { {0.633, 0.727811, 0.633, 1.0},
 {0.30, 0.30, 0.30, 1.0},
@@ -82,6 +91,9 @@ GLint ModelView, Projection;
 // Create a vertex array object
 GLuint vao;
 GLuint translatePlanetIndex;
+GLuint  thetaIndex;
+GLfloat  ThetaValue[3] = { 0.0, 0.0, 0.0 };
+GLfloat  DefaultThetaValue[3] = { 0.0, 0.0, 0.0 };
 
 
 //TRIANGLE_FAN
@@ -117,6 +129,43 @@ void drawPlanet(GLfloat radius, const color4 &ambient_color,
 	}
 
 }
+//TODO Remark station's front
+//TRIANGLE_FAN
+void drawSpaceStation(GLfloat radius, const color4 &ambient_color,
+	const color4 &diffuse_color, const color4 &specular_color) {
+
+	float sectorStep = 2 * PI / sectorCount;
+	float stackStep = PI / stackCount;
+	float sectorAngle, stackAngle;
+
+	for (int i = 0; i <= stackCount; ++i)
+	{
+		stackAngle = PI / 2 - i * stackStep;
+		float xy = radius * cosf(stackAngle);
+		float z = radius * sinf(stackAngle);
+
+		for (int j = 0; j <= sectorCount; ++j)
+		{
+			sectorAngle = j * sectorStep;
+
+			float x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
+			float y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
+			point4 point = { x,y,z,1.0 };
+			points.push_back(point);
+			vec4 normalized = normalize(vec4(x, y, z, 0.0));
+			normalized.w = 0.0;
+			normals.push_back(normalized);
+
+			ambient_products.push_back(light_ambient * ambient_color);
+			diffuse_products.push_back(light_diffuse * diffuse_color);
+			specular_products.push_back(light_specular * specular_color);
+
+			spacestationIndex++;
+		}
+	}
+
+}
+
 //TRIANGLE_STRIP
 void drawTorusY() {
 
@@ -239,12 +288,12 @@ void triangle(const point4 &a, const point4 &b, const point4 &c) {
 	pushTetraHedronColor();
 	tetrahedronIndex++;
 	points.push_back(c);
+	tetrahedronIndex++;
 	/*
 	norm = normalize(cross(a - b, c - b));
 	norm.w = 0.0;
 	normals.push_back(norm);
 	pushTetraHedronColor();
-	tetrahedronIndex++;
 	*/
 }
 
@@ -256,29 +305,23 @@ void drawTetraHedron() {
 	triangle(point4(0.0, 0.2, -1.9, 1.0), point4(-0.1, 0.0, -2.2, 1.0), point4(0.1, 0.0, -2.2, 1.0));
 }
 
-
-void drawSpaceStation() {
-	drawPlanet(2.0, ambient_color_catalogue[7], diffuse_colors_catalogue[1], specular_colors_catalogue[1]);
-}
-
 void drawPlanets() {
-	///PURPLE
-	drawPlanet(1.0, ambient_color_catalogue[1], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
-	///ORANGE
-	drawPlanet(1.0, ambient_color_catalogue[7], diffuse_colors_catalogue[3], specular_colors_catalogue[3]);
-	///PINK
-	drawPlanet(1.0, ambient_color_catalogue[2], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
-	///YELLOW
-	drawPlanet(1.0, ambient_color_catalogue[6], diffuse_colors_catalogue[5], specular_colors_catalogue[4]);
-	///LIGHT BLUE
-	drawPlanet(1.0, ambient_color_catalogue[0], diffuse_colors_catalogue[6], specular_colors_catalogue[5]);
-	///BLUE
-	drawPlanet(1.0, ambient_color_catalogue[0], diffuse_colors_catalogue[4], specular_colors_catalogue[5]);
 	///GREEN
-	drawPlanet(1.0, ambient_color_catalogue[0], diffuse_colors_catalogue[0], specular_colors_catalogue[0]);
+	drawPlanet(3, ambient_color_catalogue[0], diffuse_colors_catalogue[0], specular_colors_catalogue[0]);
+	///ORANGE
+	drawPlanet(3, ambient_color_catalogue[7], diffuse_colors_catalogue[3], specular_colors_catalogue[3]);
+	///PINK
+	drawPlanet(3, ambient_color_catalogue[2], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
+	///YELLOW
+	drawPlanet(3, ambient_color_catalogue[6], diffuse_colors_catalogue[5], specular_colors_catalogue[4]);
+	///LIGHT BLUE
+	drawPlanet(3, ambient_color_catalogue[0], diffuse_colors_catalogue[6], specular_colors_catalogue[5]);
+	///BLUE
+	drawPlanet(3, ambient_color_catalogue[0], diffuse_colors_catalogue[4], specular_colors_catalogue[5]);
 	///RED
-	drawPlanet(1.5, ambient_color_catalogue[1], diffuse_colors_catalogue[2], specular_colors_catalogue[0]);
-
+	drawPlanet(3, ambient_color_catalogue[1], diffuse_colors_catalogue[2], specular_colors_catalogue[0]);
+	///PURPLE
+	drawPlanet(3, ambient_color_catalogue[1], diffuse_colors_catalogue[7], specular_colors_catalogue[1]);
 }
 
 void drawSpaceship() {
@@ -289,7 +332,7 @@ void drawSpaceship() {
 
 void init() {
 	drawPlanets();
-	drawSpaceStation();
+	drawSpaceStation(4.0, ambient_color_catalogue[7], diffuse_colors_catalogue[1], specular_colors_catalogue[1]);
 	drawSpaceship();
 
 	glGenVertexArrays(1, &vao);
@@ -346,6 +389,7 @@ void init() {
 	ModelView = glGetUniformLocation(program, "ModelView");
 	Projection = glGetUniformLocation(program, "Projection");
 	translatePlanetIndex = glGetUniformLocation(program, "TranslatePlanets");
+	thetaIndex = glGetUniformLocation(program, "Theta");
 
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -358,41 +402,47 @@ void display(void) {
 	mat4 model_view = LookAt(eye, at, up);
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
 
+	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[1]);
-	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[2]);
-	glDrawArrays(GL_TRIANGLE_FAN, 2 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 2 * planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[3]);
-	glDrawArrays(GL_TRIANGLE_FAN, 3 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 3 * planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[4]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 4 * planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[5]);
-	glDrawArrays(GL_TRIANGLE_FAN, 5 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 5 * planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[6]);
-	glDrawArrays(GL_TRIANGLE_FAN, 6 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 6 * planetIndex / 8, planetIndex / 8);
 	glUniform4fv(translatePlanetIndex, 1, planet_coords[7]);
-	glDrawArrays(GL_TRIANGLE_FAN, 7 * planetIndex / 9, planetIndex / 9);
+	glDrawArrays(GL_TRIANGLE_FAN, 7 * planetIndex / 8, planetIndex / 8);
 
+	glUniform3fv(thetaIndex, 1, ThetaValue);
 	glUniform4fv(translatePlanetIndex, 1, station_coord);
-	glDrawArrays(GL_TRIANGLE_FAN, 8 * planetIndex / 9, planetIndex / 9);
-
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex, torusIndex);
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + torusIndex, torusIndex);
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + 2 * torusIndex, tetrahedronIndex);
+	glDrawArrays(GL_TRIANGLE_FAN, planetIndex, spacestationIndex);
 
 
+	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
+	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex, torusIndex);
+	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + torusIndex, torusIndex);
+
+	//TODO Only Z rotation and translate not cause distortion, why?
+	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
+	//point4 sa(spaceship_coord.x, spaceship_coord.y, spaceship_coord.z, spaceship_coord.w);
+	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex +  2 * torusIndex, tetrahedronIndex);
 	glutSwapBuffers();
 }
 
 void reshape(GLsizei w, GLsizei h) {
 	glViewport(0, 0, w, h);
 	GLfloat aspect = GLfloat(w) / h;
-	mat4 projection = Perspective(90.0, aspect, 0.5, 200.0);
+	mat4 projection = Perspective(90.0, aspect, 0.5, 500.0);
 	glUniformMatrix4fv(Projection, 1, GL_TRUE, projection);
 }
 
@@ -403,22 +453,70 @@ void keyboard(unsigned char key, int x, int y)
 	case 'q': case 'Q':
 		exit(EXIT_SUCCESS);
 		break;
+	case 'j': case 'J':
+		rotateAngularSpeed += 2.0;
+		if (rotateAngularSpeed >= 20) rotateAngularSpeed = 20; //Clamping
+		break;
+	case 'k': case 'K':
+		rotateAngularSpeed -= 2.0;
+		if (rotateAngularSpeed <= 0) rotateAngularSpeed = 2; //Clamping
+		break;
+	case 'a': case 'A':
+		spaceshipSpeed -= 0.25;
+		break;
+	case 'd': case 'D':
+		spaceshipSpeed += 0.25;
+		break;
 	case 'c': case 'C':
 		ViewMode = ViewMode1;
-		eye.z = -1.0;
+		eye.y = spaceship_coord.y;
+		eye.z = spaceship_coord.z - 1.0;
+		at.y = spaceship_coord.y;
+		at.z = eye.z - 1;
 		break;
 	case 's': case 'S':
 		ViewMode = ViewMode2;
 		break;
 	case 't': case 'T':
 		ViewMode = ViewMode3;
-		eye.z = 2.5;
+		eye.y = spaceship_coord.y + 2.0;
+		eye.z = spaceship_coord.z + 4;
+		at.y = spaceship_coord.y + 2.0;
+		at.z = eye.z - 1;
 		break;
 	case 'w': case 'W':
 		ViewMode = ViewMode4;
+		eye.y = LARGE_Y;
+		eye.z = -200;
 		break;
 	}
 	glutPostRedisplay();
+}
+
+void moveSpaceship(int id)
+{
+	spaceship_coord[2] += spaceshipSpeed * -1;
+	if (ViewMode != ViewMode4) {
+		eye.z += spaceshipSpeed * -1;
+		at.z += spaceshipSpeed * -1;
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(200, moveSpaceship, 0);
+}
+
+void rotateSpaceStation(int id)
+{
+	if (rotatingDegreeSpaceStation > 360) rotatingDegreeSpaceStation = 0;
+
+	//Rotate
+	ThetaValue[0] = 0.0;
+	ThetaValue[1] = rotatingDegreeSpaceStation;
+	ThetaValue[2] = 0.0;
+	rotatingDegreeSpaceStation += rotateAngularSpeed;
+
+	glutPostRedisplay();
+	glutTimerFunc(75, rotateSpaceStation, 1);
 }
 
 int main(int argc, char **argv) {
@@ -434,6 +532,8 @@ int main(int argc, char **argv) {
 	glutKeyboardFunc(keyboard);
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
+	glutTimerFunc(10, moveSpaceship, 0);
+	glutTimerFunc(10, rotateSpaceStation, 1);
 	glutMainLoop();
 	return 0;
 }
