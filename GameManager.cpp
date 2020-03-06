@@ -31,9 +31,10 @@ GLint stackCount = 100;
 GLfloat spaceshipSpeed = 2.0f;
 vec4 velocityVector(0.0, 0.0, -1.0, 0.0);
 
-GLfloat rotateAngularSpeed = 2.0f;
-
+GLfloat angularSpeed = 2.0f;
 GLfloat rotatingDegreeSpaceStation = 0.0;
+bool isPaused = false;
+bool framePerMove = false;
 
 vector<point4> points;
 vector<point4> normals;
@@ -90,7 +91,7 @@ color4 specular_colors_catalogue[8] = { {0.0215, 0.1745, 0.0215, 1.0},
 GLint ModelView, Projection;
 // Create a vertex array object
 GLuint vao;
-GLuint translatePlanetIndex;
+GLuint translateObjectIndex;
 GLuint  thetaIndex;
 GLfloat  ThetaValue[3] = { 0.0, 0.0, 0.0 };
 GLfloat  DefaultThetaValue[3] = { 0.0, 0.0, 0.0 };
@@ -388,7 +389,7 @@ void init() {
 
 	ModelView = glGetUniformLocation(program, "ModelView");
 	Projection = glGetUniformLocation(program, "Projection");
-	translatePlanetIndex = glGetUniformLocation(program, "TranslatePlanets");
+	translateObjectIndex = glGetUniformLocation(program, "TranslateObjects");
 	thetaIndex = glGetUniformLocation(program, "Theta");
 
 	glEnable(GL_DEPTH_TEST);
@@ -403,38 +404,38 @@ void display(void) {
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
 
 	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[0]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[0]);
 	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[1]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[1]);
 	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[2]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[2]);
 	glDrawArrays(GL_TRIANGLE_FAN, 2 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[3]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[3]);
 	glDrawArrays(GL_TRIANGLE_FAN, 3 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[4]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[4]);
 	glDrawArrays(GL_TRIANGLE_FAN, 4 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[5]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[5]);
 	glDrawArrays(GL_TRIANGLE_FAN, 5 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[6]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[6]);
 	glDrawArrays(GL_TRIANGLE_FAN, 6 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translatePlanetIndex, 1, planet_coords[7]);
+	glUniform4fv(translateObjectIndex, 1, planet_coords[7]);
 	glDrawArrays(GL_TRIANGLE_FAN, 7 * planetIndex / 8, planetIndex / 8);
 
 	glUniform3fv(thetaIndex, 1, ThetaValue);
-	glUniform4fv(translatePlanetIndex, 1, station_coord);
+	glUniform4fv(translateObjectIndex, 1, station_coord);
 	glDrawArrays(GL_TRIANGLE_FAN, planetIndex, spacestationIndex);
 
 
 	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
 	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex, torusIndex);
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
 	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + torusIndex, torusIndex);
 
 	//TODO Only Z rotation and translate not cause distortion, why?
 	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
 	//point4 sa(spaceship_coord.x, spaceship_coord.y, spaceship_coord.z, spaceship_coord.w);
-	glUniform4fv(translatePlanetIndex, 1, spaceship_coord);
+	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
 	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex +  2 * torusIndex, tetrahedronIndex);
 	glutSwapBuffers();
 }
@@ -446,6 +447,19 @@ void reshape(GLsizei w, GLsizei h) {
 	glUniformMatrix4fv(Projection, 1, GL_TRUE, projection);
 }
 
+void specialKeyInputFunc(int key, int x, int y)
+{
+	if (key == GLUT_KEY_LEFT)
+	{
+		
+	}
+	if (key == GLUT_KEY_RIGHT)
+	{
+		
+	}
+	glutPostRedisplay();
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
@@ -454,18 +468,24 @@ void keyboard(unsigned char key, int x, int y)
 		exit(EXIT_SUCCESS);
 		break;
 	case 'j': case 'J':
-		rotateAngularSpeed += 2.0;
-		if (rotateAngularSpeed >= 20) rotateAngularSpeed = 20; //Clamping
+		if (isPaused) return;
+		angularSpeed += 2.0;
+		if (angularSpeed >= 20) angularSpeed = 20; //Clamping
 		break;
 	case 'k': case 'K':
-		rotateAngularSpeed -= 2.0;
-		if (rotateAngularSpeed <= 0) rotateAngularSpeed = 2; //Clamping
+		if (isPaused) return;
+		angularSpeed -= 2.0;
+		if (angularSpeed <= 0) angularSpeed = 2; //Clamping
 		break;
 	case 'a': case 'A':
-		spaceshipSpeed -= 0.25;
+		if (isPaused) return;
+		if(ViewMode != ViewMode2)
+			spaceshipSpeed -= 0.25;
 		break;
 	case 'd': case 'D':
-		spaceshipSpeed += 0.25;
+		if (isPaused) return;
+		if(ViewMode != ViewMode2)
+			spaceshipSpeed += 0.25;
 		break;
 	case 'c': case 'C':
 		ViewMode = ViewMode1;
@@ -489,18 +509,48 @@ void keyboard(unsigned char key, int x, int y)
 		eye.y = LARGE_Y;
 		eye.z = -200;
 		break;
+	case 'p': case 'P':
+		isPaused = !isPaused;
+		break;
 	}
 	glutPostRedisplay();
 }
 
+void debugInformation() {
+	system("CLS");
+	printf("Spaceship Location(x,y,z): %f,%f,%f\n", spaceship_coord.x, spaceship_coord.y, spaceship_coord.z);
+	printf("Spaceship Velocity Vector: \n");
+	printf("Spaceship Speed: %f\n", spaceshipSpeed);
+	printf("Space Station Angular Speed: %f\n", angularSpeed);
+}
+
+void mouseFunc(int btn, int state, int x, int y)
+{
+	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+	{
+		if (!isPaused) isPaused = true;
+		else
+		{
+			debugInformation(); //TODO velocity vector
+			framePerMove = true;
+		}
+
+	}
+	if (state == GLUT_UP)
+	{
+		framePerMove = false;
+	}
+}
+
 void moveSpaceship(int id)
 {
-	spaceship_coord[2] += spaceshipSpeed * -1;
-	if (ViewMode != ViewMode4) {
-		eye.z += spaceshipSpeed * -1;
-		at.z += spaceshipSpeed * -1;
+	if (!isPaused || framePerMove) {
+		spaceship_coord[2] += spaceshipSpeed * -1;
+		if (ViewMode != ViewMode4) {
+			eye.z += spaceshipSpeed * -1;
+			at.z += spaceshipSpeed * -1;
+		}
 	}
-
 	glutPostRedisplay();
 	glutTimerFunc(200, moveSpaceship, 0);
 }
@@ -508,12 +558,13 @@ void moveSpaceship(int id)
 void rotateSpaceStation(int id)
 {
 	if (rotatingDegreeSpaceStation > 360) rotatingDegreeSpaceStation = 0;
-
-	//Rotate
-	ThetaValue[0] = 0.0;
-	ThetaValue[1] = rotatingDegreeSpaceStation;
-	ThetaValue[2] = 0.0;
-	rotatingDegreeSpaceStation += rotateAngularSpeed;
+	if (!isPaused || framePerMove) {
+		//Rotate
+		ThetaValue[0] = 0.0;
+		ThetaValue[1] = rotatingDegreeSpaceStation;
+		ThetaValue[2] = 0.0;
+		rotatingDegreeSpaceStation += angularSpeed;
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(75, rotateSpaceStation, 1);
@@ -529,10 +580,12 @@ int main(int argc, char **argv) {
 	glewExperimental = GL_TRUE;
 	glewInit();
 	init();
+	glutMouseFunc(mouseFunc);
 	glutKeyboardFunc(keyboard);
+	glutSpecialFunc(specialKeyInputFunc);
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
-	glutTimerFunc(10, moveSpaceship, 0);
+	//glutTimerFunc(10, moveSpaceship, 0);
 	glutTimerFunc(10, rotateSpaceStation, 1);
 	glutMainLoop();
 	return 0;

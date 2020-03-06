@@ -9,7 +9,7 @@ in vec4 SpecularProduct;
 out vec4 color;
 
 uniform vec3 Theta;
-uniform vec4 TranslatePlanets;
+uniform vec4 TranslateObjects;
 uniform mat4 ModelView;
 uniform mat4 Projection;
 uniform vec4 LightPosition;
@@ -62,7 +62,7 @@ void main()
     mat4 tXYZ = mat4(1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
-    TranslatePlanets.x, TranslatePlanets.y, TranslatePlanets.z, 1.0);
+    TranslateObjects.x, TranslateObjects.y, TranslateObjects.z, 1.0);
     
     gl_Position = Projection * ModelView * tXYZ * rX * rY * rZ * vPosition;
 
