@@ -853,11 +853,11 @@ namespace Angel {
 		vec4 v = normalize(vec4(cross(n, u), 0.0));
 		vec4 t = vec4(0.0, 0.0, 0.0, 1.0);
 		mat4 c = mat4(u, v, n, t);
-		std::cout << "Rt" << c << "\n";
+		//std::cout << "Rt" << c << "\n";
 		mat4 d = Translate(-eye);
-		std::cout << d << "\n";
+		//std::cout << d << "\n";
 		mat4 r = c * d;
-		printm(r);
+		//printm(r);
 		return r;
 		// return c * d;
 		// return c * Translate( -eye );

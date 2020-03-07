@@ -2,6 +2,7 @@
 #include "Angel.h"
 #include <vector>
 #include <Math.h>
+#include <playsoundapi.h>
 
 using namespace Angel;
 using namespace std;
@@ -32,6 +33,8 @@ GLfloat spaceshipSpeed = 2.0f;
 vec4 velocityVector(0.0, 0.0, -1.0, 0.0);
 GLfloat velocityDirectionAngle = 0.0;
 
+GLint radiusCircleIndex = 1000;
+
 GLfloat angularSpeed = 2.0f;
 GLfloat rotatingDegreeSpaceStation = 0.0;
 bool isPaused = false;
@@ -45,7 +48,6 @@ vector<color4> specular_products;
 
 GLint planetIndex = 0;
 GLint torusIndex = 0;
-GLint tetrahedronIndex = 0;
 GLint spacestationIndex = 0;
 
 point4 spaceship_coord = { 105.0, 15.0, 0.0, 1.0 };
@@ -94,7 +96,6 @@ GLint ModelView, Projection;
 GLuint vao;
 GLuint translateObjectIndex;
 GLuint  thetaIndex;
-GLuint frontIndex;
 GLfloat  ThetaValue[3] = { 0.0, 0.0, 0.0 };
 GLfloat  DefaultThetaValue[3] = { 0.0, 0.0, 0.0 };
 
@@ -102,7 +103,6 @@ GLfloat  DefaultThetaValue[3] = { 0.0, 0.0, 0.0 };
 //TRIANGLE_FAN
 void drawPlanet(GLfloat radius, const color4 &ambient_color,
 			 const color4 &diffuse_color, const color4 &specular_color) {
-
 	float sectorStep = 2 * PI / sectorCount;
 	float stackStep = PI / stackCount;
 	float sectorAngle, stackAngle;
@@ -130,6 +130,30 @@ void drawPlanet(GLfloat radius, const color4 &ambient_color,
 			planetIndex++;
 		}
 	}
+
+	GLfloat angle;
+	for (int i = 0; i < radiusCircleIndex/2; i++)
+	{
+		angle = 2 * PI * (i + 1) / 499;
+		points.push_back(point4(cos(angle) *  3.5, 0.0 , sin(angle) * 3.5, 1.0));
+		normals.push_back(vec4(cos(angle) *  3.5, 0.0, sin(angle) * 3.5, 0.0));
+		ambient_products.push_back(light_ambient*vec4(1.0, 1, 1, 1.0));
+		diffuse_products.push_back(light_diffuse*vec4(1.0, 1, 1, 1.0));
+		specular_products.push_back(light_specular*vec4(1, 1, 1, 1.0));
+		//printf("Pressing left, respectively.X %f\n", PirateFace[i].x);
+		//printf("Pressing left, respectively.Y %f\n", PirateFace[i].y);
+	}
+
+	for (int i = 0; i < radiusCircleIndex / 2; i++)
+	{
+		angle = 2 * PI * (i + 1) / 499;
+		points.push_back(point4(cos(angle) *  4.3, 0.0, sin(angle) * 4.3, 1.0));
+		normals.push_back(vec4(cos(angle) *  4.3, 0.0, sin(angle) * 4.3, 0.0));
+		ambient_products.push_back(light_ambient*vec4(1.0, 1, 1, 1.0));
+		diffuse_products.push_back(light_diffuse*vec4(1.0, 1, 1, 1.0));
+		specular_products.push_back(light_specular*vec4(1, 1, 1, 1.0));
+	}
+
 
 }
 //TODO Remark station's front
@@ -169,7 +193,7 @@ void drawSpaceStation(GLfloat radius, const color4 &ambient_color,
 
 }
 
-void pushTetraHedronColor() {
+void pushTetraHedronandFrontColor() {
 	ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
 	diffuse_products.push_back(light_diffuse*vec4(0.9, 0.9, 0.7, 1.0));
 	specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
@@ -177,25 +201,20 @@ void pushTetraHedronColor() {
 
 void triangle(const point4 &a, const point4 &b, const point4 &c) {
 	points.push_back(a);
-	pushTetraHedronColor();
+	pushTetraHedronandFrontColor();
 	vec4 norm = normalize(cross(b - a, c - a));
 	norm.w = 0.0;
 	normals.push_back(norm);
-	//tetrahedronIndex++;
 	points.push_back(b);
 	norm = normalize(cross(a - c, b - c));
 	norm.w = 0.0;
 	normals.push_back(norm);
-	pushTetraHedronColor();
-	//tetrahedronIndex++;
+	pushTetraHedronandFrontColor();
 	points.push_back(c);
-	//tetrahedronIndex++;
-	
 	norm = normalize(cross(a - b, c - b));
 	norm.w = 0.0;
 	normals.push_back(norm);
-	pushTetraHedronColor();
-	
+	pushTetraHedronandFrontColor();
 }
 
 
@@ -309,10 +328,10 @@ void drawTorusZ() {
 
 //TRIANGLE_STRIP
 void drawTetraHedron() {
-	triangle(point4(-0.1, 0.0, -2.2, 1.0),point4(0.0, 0.0, -1.7, 1.0), point4(0.1, 0.0, -2.2, 1.0));
-	triangle(point4(0.1, 0.0, -2.2, 1.0), point4(0.0, 0.2, -1.9, 1.0), point4(0.0, 0.0, -1.7, 1.0));
-	triangle(point4(0.0, 0.2, -1.9, 1.0), point4(-0.1, 0.0, -2.2, 1.0), point4(0.0, 0.0, -1.7, 1.0));
-	triangle(point4(0.0, 0.2, -1.9, 1.0), point4(-0.1, 0.0, -2.2, 1.0), point4(0.1, 0.0, -2.2, 1.0));
+	triangle(point4(-0.1, 0.0, -3.2, 1.0),point4(0.0, 0.0, -2.7, 1.0), point4(0.1, 0.0, -3.2, 1.0));
+	triangle(point4(0.1, 0.0, -3.2, 1.0), point4(0.0, 0.2, -2.9, 1.0), point4(0.0, 0.0, -2.7, 1.0));
+	triangle(point4(0.0, 0.2, -2.9, 1.0), point4(-0.1, 0.0, -3.2, 1.0), point4(0.0, 0.0, -3.7, 1.0));
+	triangle(point4(0.0, 0.2, -2.9, 1.0), point4(-0.1, 0.0, -3.2, 1.0), point4(0.1, 0.0, -3.2, 1.0));
 }
 
 void drawPlanets() {
@@ -414,41 +433,36 @@ void display(void) {
 	mat4 model_view = LookAt(eye, at, up);
 	glUniformMatrix4fv(ModelView, 1, GL_TRUE, model_view);
 
-	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[0]);
-	glDrawArrays(GL_TRIANGLE_FAN, 0, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[1]);
-	glDrawArrays(GL_TRIANGLE_FAN, planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[2]);
-	glDrawArrays(GL_TRIANGLE_FAN, 2 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[3]);
-	glDrawArrays(GL_TRIANGLE_FAN, 3 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[4]);
-	glDrawArrays(GL_TRIANGLE_FAN, 4 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[5]);
-	glDrawArrays(GL_TRIANGLE_FAN, 5 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[6]);
-	glDrawArrays(GL_TRIANGLE_FAN, 6 * planetIndex / 8, planetIndex / 8);
-	glUniform4fv(translateObjectIndex, 1, planet_coords[7]);
-	glDrawArrays(GL_TRIANGLE_FAN, 7 * planetIndex / 8, planetIndex / 8);
+
+	for (int i = 0; i < 8; i++) {
+		glUniform4fv(translateObjectIndex, 1, planet_coords[i]);
+		glUniform3fv(thetaIndex, 1, DefaultThetaValue);
+		glDrawArrays(GL_TRIANGLE_FAN, i * (planetIndex/8) + radiusCircleIndex / 2 * 2 * i, planetIndex / 8);
+		glUniform3fv(thetaIndex, 1, vec3(0.0, 0.0, 45.0));
+		glDrawArrays(GL_LINE_LOOP, (i+1)*(planetIndex / 8) + (radiusCircleIndex / 2) * 2 * i, radiusCircleIndex/2);
+		glDrawArrays(GL_LINE_LOOP, (i+1)*(planetIndex / 8) + (radiusCircleIndex / 2) * (2 * i + 1) , radiusCircleIndex / 2);
+	}
+
+	
 
 	glUniform3fv(thetaIndex, 1, ThetaValue);
 	glUniform4fv(translateObjectIndex, 1, station_coord);
-	glDrawArrays(GL_TRIANGLE_FAN, planetIndex, spacestationIndex);
-	glDrawArrays(GL_TRIANGLE_FAN, planetIndex + spacestationIndex, 6);
+	glDrawArrays(GL_TRIANGLE_FAN, planetIndex + radiusCircleIndex * 8, spacestationIndex);
+	glDrawArrays(GL_TRIANGLE_FAN, planetIndex + spacestationIndex + radiusCircleIndex * 8, 6);
 
 
 	glUniform3fv(thetaIndex, 1, vec3(0.0,velocityDirectionAngle,0.0));
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6 + radiusCircleIndex * 8, torusIndex);
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6 + torusIndex, torusIndex);
+	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6 + torusIndex + radiusCircleIndex * 8, torusIndex);
 
 	//TODO Only Z rotation and translate not cause distortion, why?
-	glUniform3fv(thetaIndex, 1, DefaultThetaValue);
+	//glUniform3fv(thetaIndex, 1, DefaultThetaValue);
+	glUniform3fv(thetaIndex, 1, vec3(0.0, 0.0, velocityDirectionAngle));
 	//point4 sa(spaceship_coord.x, spaceship_coord.y, spaceship_coord.z, spaceship_coord.w);
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
-	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6 +  2 * torusIndex, 12);
+	glDrawArrays(GL_TRIANGLES, planetIndex + spacestationIndex + 6 +  2 * torusIndex + radiusCircleIndex * 8, 12);
 	glutSwapBuffers();
 }
 
@@ -546,7 +560,7 @@ void keyboard(unsigned char key, int x, int y)
 void debugInformation() {
 	system("CLS");
 	printf("Spaceship Location(x,y,z): %f,%f,%f\n", spaceship_coord.x, spaceship_coord.y, spaceship_coord.z);
-	printf("Spaceship Velocity Vector: \n");
+	printf("Spaceship Velocity Vector: %f,%f,%f\n", velocityVector.x, velocityVector.y, velocityVector.z);
 	printf("Spaceship Speed: %f\n", spaceshipSpeed);
 	printf("Space Station Angular Speed: %f\n", angularSpeed);
 }
@@ -558,7 +572,7 @@ void mouseFunc(int btn, int state, int x, int y)
 		if (!isPaused) isPaused = true;
 		else
 		{
-			debugInformation(); //TODO velocity vector
+			debugInformation();
 			framePerMove = true;
 		}
 
@@ -593,6 +607,7 @@ void rotateSpaceStation(int id)
 		rotatingDegreeSpaceStation += angularSpeed;
 
 		if (ViewMode == ViewMode2) {
+			/*
 			mat4 rY = mat4(cos(rotatingDegreeSpaceStation * PI / 180), 0.0, sin(rotatingDegreeSpaceStation * PI / 180), 0.0,
 				0.0, 1.0, 0.0, 0.0,
 				-sin(rotatingDegreeSpaceStation * PI / 180), 0.0, cos(rotatingDegreeSpaceStation * PI / 180), 0.0,
@@ -609,6 +624,7 @@ void rotateSpaceStation(int id)
 
 			eye = transpose(minustXYZ) * rY * transpose(tXYZ) * eye;
 			at = transpose(minustXYZ) * rY * transpose(tXYZ) * at;
+			*/
 			//at = minustXYZ2 * rY * tXYZ2 * at;
 			//TODO rotate camera either
 		}
