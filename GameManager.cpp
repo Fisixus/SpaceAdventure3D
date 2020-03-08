@@ -29,7 +29,7 @@ vec4 up(0.0, 1.0, 0.0, 0.0);
 //For planets and space station
 GLint sectorCount = 100;
 GLint stackCount = 100;
-GLfloat spaceshipSpeed = 2.0f;
+GLfloat spaceshipSpeed = 1.5f;
 vec4 velocityVector(0.0, 0.0, -1.0, 0.0);
 GLfloat velocityDirectionAngle = 0.0;
 
@@ -136,8 +136,6 @@ void drawPlanet(GLfloat radius, const color4 &ambient_color,
 		ambient_products.push_back(light_ambient*vec4(1.0, 1, 1, 1.0));
 		diffuse_products.push_back(light_diffuse*vec4(1.0, 1, 1, 1.0));
 		specular_products.push_back(light_specular*vec4(1, 1, 1, 1.0));
-		//printf("Pressing left, respectively.X %f\n", PirateFace[i].x);
-		//printf("Pressing left, respectively.Y %f\n", PirateFace[i].y);
 	}
 
 	for (int i = 0; i < radiusCircleIndex / 2; i++)
@@ -475,6 +473,7 @@ void specialKeyInputFunc(int key, int x, int y)
 			velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
 		}
 	}
+
 	if (key == GLUT_KEY_RIGHT)
 	{
 		if(ViewMode != ViewMode2)
@@ -482,6 +481,34 @@ void specialKeyInputFunc(int key, int x, int y)
 			velocityDirectionAngle -= 5;
 			velocityVector.x = -1 * sin(velocityDirectionAngle*DegreesToRadians);
 			velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
+		}
+	}
+
+	if (key == GLUT_KEY_UP)
+	{
+		if(spaceship_coord.y <= 20.0)
+		{
+			if (ViewMode != ViewMode2)
+			{
+				if (velocityVector.y < 0.0)
+					velocityVector.y = 0.0;
+				else
+					velocityVector.y = 0.25;
+			}
+		}
+	}
+
+	if (key == GLUT_KEY_DOWN)
+	{
+		if(spaceship_coord.y >= -20.0)
+		{
+			if (ViewMode != ViewMode2)
+			{
+				if (velocityVector.y > 0.0)
+					velocityVector.y = 0.0;
+				else
+					velocityVector.y = -0.25;
+			}
 		}
 	}
 	glutPostRedisplay();
@@ -546,6 +573,8 @@ void keyboard(unsigned char key, int x, int y)
 		ViewMode = ViewMode4;
 		eye.y = LARGE_Y;
 		eye.z = -200;
+		at.z = eye.z - 1;
+		at.x = 90;
 		break;
 	case 'p': case 'P':
 		isPaused = !isPaused;
@@ -603,26 +632,29 @@ void rotateSpaceStation(int id)
 		rotatingDegreeSpaceStation += angularSpeed;
 
 		if (ViewMode == ViewMode2) {
-			/*
-			mat4 rY = mat4(cos(rotatingDegreeSpaceStation * PI / 180), 0.0, sin(rotatingDegreeSpaceStation * PI / 180), 0.0,
+
+			mat4 rY = mat4(cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
 				0.0, 1.0, 0.0, 0.0,
-				-sin(rotatingDegreeSpaceStation * PI / 180), 0.0, cos(rotatingDegreeSpaceStation * PI / 180), 0.0,
+				-sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
 				0.0, 0.0, 0.0, 1.0);
-			mat4 tXYZ = mat4(1.0, 0.0, 0.0, 0.0,
-				0.0, 1.0, 0.0, 0.0,
-				0.0, 0.0, 1.0, 0.0,
-				0 - eye.x, 0 - eye.y, 0 - eye.z, 1.0);
-			mat4 minustXYZ = mat4(1.0, 0.0, 0.0, 0.0,
-				0.0, 1.0, 0.0, 0.0,
-				0.0, 0.0, 1.0, 0.0,
-				eye.x, eye.y, eye.z, 1.0);
+			point4 rotatingEye = rY * point4(-0.4, 0.4, -10.0, 1.0);
+			point4 rotatingAt = rY * point4(0.0, 0.0, -1, 1.0);
 
+			eye.z = station_coord.z - 5; // 5 equals to r of space station
+			eye.y = station_coord.y;
+			eye.x = station_coord.x;
+			at.z = eye.z - 1;
+			at.y = station_coord.y;
+			at.x = station_coord.x;
 
-			eye = transpose(minustXYZ) * rY * transpose(tXYZ) * eye;
-			at = transpose(minustXYZ) * rY * transpose(tXYZ) * at;
-			*/
-			//at = minustXYZ2 * rY * tXYZ2 * at;
-			//TODO rotate camera either
+			eye.x += rotatingEye.x;
+			eye.y += rotatingEye.y;
+			eye.z += rotatingEye.z;
+			at = eye;
+			at.x += rotatingAt.x;
+			at.y += rotatingAt.y;
+			at.z += rotatingAt.z;
+
 		}
 	}
 
