@@ -92,15 +92,11 @@ color4 specular_colors_catalogue[8] = { {0.0215, 0.1745, 0.0215, 1.0},
 {0.00, 0.00, 0.00, 0.0} };
 
 GLint ModelView, Projection;
-// Create a vertex array object
 GLuint vao;
 GLuint translateObjectIndex;
 GLuint  thetaIndex;
-GLfloat  ThetaValue[3] = { 0.0, 0.0, 0.0 };
 GLfloat  DefaultThetaValue[3] = { 0.0, 0.0, 0.0 };
 
-
-//TRIANGLE_FAN
 void drawPlanet(GLfloat radius, const color4 &ambient_color,
 			 const color4 &diffuse_color, const color4 &specular_color) {
 	float sectorStep = 2 * PI / sectorCount;
@@ -156,8 +152,7 @@ void drawPlanet(GLfloat radius, const color4 &ambient_color,
 
 
 }
-//TODO Remark station's front
-//TRIANGLE_FAN
+
 void drawSpaceStation(GLfloat radius, const color4 &ambient_color,
 	const color4 &diffuse_color, const color4 &specular_color) {
 
@@ -195,7 +190,7 @@ void drawSpaceStation(GLfloat radius, const color4 &ambient_color,
 
 void pushTetraHedronandFrontColor() {
 	ambient_products.push_back(light_ambient*vec4(1.0, 0.0, 0.0, 1.0));
-	diffuse_products.push_back(light_diffuse*vec4(0.9, 0.9, 0.7, 1.0));
+	diffuse_products.push_back(light_diffuse*vec4(1.0, 0.0, 0.7, 1.0));
 	specular_products.push_back(light_specular*vec4(0.0215, 0.1745, 0.0215, 1.0));
 }
 
@@ -365,6 +360,7 @@ void init() {
 	drawSpaceStation(4.0, ambient_color_catalogue[7], diffuse_colors_catalogue[1], specular_colors_catalogue[1]);
 	drawFront();
 	drawSpaceship();
+	//PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -443,13 +439,10 @@ void display(void) {
 		glDrawArrays(GL_LINE_LOOP, (i+1)*(planetIndex / 8) + (radiusCircleIndex / 2) * (2 * i + 1) , radiusCircleIndex / 2);
 	}
 
-	
-
-	glUniform3fv(thetaIndex, 1, ThetaValue);
+	glUniform3fv(thetaIndex, 1, vec3(0.0, rotatingDegreeSpaceStation, 0.0));
 	glUniform4fv(translateObjectIndex, 1, station_coord);
 	glDrawArrays(GL_TRIANGLE_FAN, planetIndex + radiusCircleIndex * 8, spacestationIndex);
 	glDrawArrays(GL_TRIANGLE_FAN, planetIndex + spacestationIndex + radiusCircleIndex * 8, 6);
-
 
 	glUniform3fv(thetaIndex, 1, vec3(0.0,velocityDirectionAngle,0.0));
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
@@ -457,10 +450,7 @@ void display(void) {
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
 	glDrawArrays(GL_TRIANGLE_STRIP, planetIndex + spacestationIndex + 6 + torusIndex + radiusCircleIndex * 8, torusIndex);
 
-	//TODO Only Z rotation and translate not cause distortion, why?
-	//glUniform3fv(thetaIndex, 1, DefaultThetaValue);
 	glUniform3fv(thetaIndex, 1, vec3(0.0, 0.0, velocityDirectionAngle));
-	//point4 sa(spaceship_coord.x, spaceship_coord.y, spaceship_coord.z, spaceship_coord.w);
 	glUniform4fv(translateObjectIndex, 1, spaceship_coord);
 	glDrawArrays(GL_TRIANGLES, planetIndex + spacestationIndex + 6 +  2 * torusIndex + radiusCircleIndex * 8, 12);
 	glutSwapBuffers();
@@ -478,15 +468,21 @@ void specialKeyInputFunc(int key, int x, int y)
 	if (velocityDirectionAngle == 360 || velocityDirectionAngle == -360) velocityDirectionAngle = 0;
 	if (key == GLUT_KEY_LEFT)
 	{
-		velocityDirectionAngle += 5;
-		velocityVector.x = -1 * sin(velocityDirectionAngle*DegreesToRadians);
-		velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
+		if(ViewMode != ViewMode2)
+		{
+			velocityDirectionAngle += 5;
+			velocityVector.x = -1 * sin(velocityDirectionAngle*DegreesToRadians);
+			velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
+		}
 	}
 	if (key == GLUT_KEY_RIGHT)
 	{
-		velocityDirectionAngle -= 5;
-		velocityVector.x = -1 * sin(velocityDirectionAngle*DegreesToRadians);
-		velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
+		if(ViewMode != ViewMode2)
+		{
+			velocityDirectionAngle -= 5;
+			velocityVector.x = -1 * sin(velocityDirectionAngle*DegreesToRadians);
+			velocityVector.z = -1 * cos(velocityDirectionAngle*DegreesToRadians);
+		}
 	}
 	glutPostRedisplay();
 }
@@ -512,6 +508,7 @@ void keyboard(unsigned char key, int x, int y)
 		if (isPaused) return;
 		if(ViewMode != ViewMode2)
 			spaceshipSpeed -= 0.25;
+		if (spaceshipSpeed <= 0) spaceshipSpeed = 0.25;
 		break;
 	case 'd': case 'D':
 		if (isPaused) return;
@@ -552,6 +549,8 @@ void keyboard(unsigned char key, int x, int y)
 		break;
 	case 'p': case 'P':
 		isPaused = !isPaused;
+		if(isPaused) PlaySound(NULL, 0, 0);
+		//else if(!isPaused) PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
 		break;
 	}
 	glutPostRedisplay();
@@ -569,6 +568,7 @@ void mouseFunc(int btn, int state, int x, int y)
 {
 	if (btn == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
 	{
+		PlaySound(NULL, 0, 0);
 		if (!isPaused) isPaused = true;
 		else
 		{
@@ -600,10 +600,6 @@ void rotateSpaceStation(int id)
 {
 	if (rotatingDegreeSpaceStation > 360) rotatingDegreeSpaceStation = 0;
 	if (!isPaused || framePerMove) {
-		//Rotate
-		ThetaValue[0] = 0.0;
-		ThetaValue[1] = rotatingDegreeSpaceStation;
-		ThetaValue[2] = 0.0;
 		rotatingDegreeSpaceStation += angularSpeed;
 
 		if (ViewMode == ViewMode2) {
