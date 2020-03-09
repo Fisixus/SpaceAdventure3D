@@ -38,8 +38,8 @@ By pressing '**w**', the camera will set up to LARGE_Y position, so you can see 
 **Spaceship Mobility**
 - By pressing '**Left Arrow**', the ship and the compass(tetrahedron) will slightly turn to left and move that direction.
 - By pressing '**Right Arrow**', the ship and the compass(tetrahedron) will slightly turn to right and move that direction.
-- By pressing '**Up Arrow**', the ship will move up slightly.
-- By pressing '**Down Arrow**', the ship will move down slightly.
+- By pressing '**Up Arrow**', the ship will move up slightly. If you are in down direction and press to up arrow, then ships' velocity vector's *y* value will be 0.
+- By pressing '**Down Arrow**', the ship will move down slightly. If you are in up direction and press to down arrow, then ships' velocity vector's *y* value will be 0.
 
 **Spaceship Speed**
 - By pressing '**d**', the speed of the ship will increase.
@@ -58,3 +58,5 @@ By pressing '**w**', the camera will set up to LARGE_Y position, so you can see 
   - Angular speed of the ship
 
 Written to the console for debug purposes.
+
+**! Spaceship and space station always continue to their movement unless the simulation is not in pause state.**
