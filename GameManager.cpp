@@ -52,7 +52,6 @@ GLint spacestationIndex = 0;
 
 point4 spaceship_coord = { 105.0, 15.0, 0.0, 1.0 };
 point4 station_coord = { 100.0, 10.0, -10.0, 1.0 };
-point4 station_front = { 0.5, 0.5, 0.5, 1.0 };
 
 point4 planet_coords[8] = { 
 {30, 30, -30, 1},
