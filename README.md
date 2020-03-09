@@ -20,18 +20,41 @@ The ground lies along the x-z plane and the y axis points up. So in the beginnin
 ### View Modes
 **View Mode 1**
 
-If you press '**c**',  the camera will set up to front of the spaceship and you can find your direction by looking up the tetrahedrons's(Compass) direction.
+By pressing '**c**',  the camera will set up to front of the spaceship and you can find your direction by looking up the tetrahedrons's(Compass) direction.
 
 **View Mode 2**
 
-If you press '**s**', the camera will set up to front of the space station, so you can see the planetary system by the space station's front(pink square).
+By pressing '**s**', the camera will set up to front of the space station, so you can see the planetary system by the space station's front(pink square).
 
 **View Mode 3**
 
-If you press '**t**', the camera will set up to slightly up and back of the spaceship, so you can see space as well as the ship.
+By pressing '**t**', the camera will set up to slightly up and back of the spaceship, so you can see space as well as the ship.
 
 **View Mode 4**
 
-If you press '**w**', the camera will set up to LARGE_Y position, so you can see the whole planet system, spaceship and space station by top view.
+By pressing '**w**', the camera will set up to LARGE_Y position, so you can see the whole planet system, spaceship and space station by top view.
 
 ### Other Capabilities
+**Spaceship Mobility**
+- By pressing '**Left Arrow**', the ship and the compass(tetrahedron) will slightly turn to left and move that direction.
+- By pressing '**Right Arrow**', the ship and the compass(tetrahedron) will slightly turn to right and move that direction.
+- By pressing '**Up Arrow**', the ship will move up slightly.
+- By pressing '**Down Arrow**', the ship will move down slightly.
+
+**Spaceship Speed**
+- By pressing '**d**', the speed of the ship will increase.
+- By pressing '**a**', the speed of the ship will decrease.
+
+**Space Station Speed**
+- By pressing '**j**', the angular speed of the station will increase.
+- By pressing '**k**', the angular speed of the station will decrease.
+
+**Game Settings**
+- By pressing '**p**', the simulation will stop but you can still rotate the ship, if simulation is already in pause mode then it will continue.
+- By clicking '**Right Mouse**', the simulation enters paused state if the simulation is not in pause state. Then in every click ship and station will continue to their move frame by frame. Moreover in every click:
+  - Current coordinat values of the ship
+  - Velocity vector of the ship
+  - Speed of the ship
+  - Angular speed of the ship
+
+Written to the console for debug purposes.
