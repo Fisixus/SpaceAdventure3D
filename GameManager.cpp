@@ -358,7 +358,7 @@ void init() {
 	drawSpaceStation(4.0, ambient_color_catalogue[7], diffuse_colors_catalogue[1], specular_colors_catalogue[1]);
 	drawFront();
 	drawSpaceship();
-	//PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+	PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
 
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
@@ -579,7 +579,7 @@ void keyboard(unsigned char key, int x, int y)
 	case 'p': case 'P':
 		isPaused = !isPaused;
 		if(isPaused) PlaySound(NULL, 0, 0);
-		//else if(!isPaused) PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+		else if(!isPaused) PlaySound(TEXT("2001_A_Space_Odyssey.wav"), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
 		break;
 	}
 	glutPostRedisplay();
