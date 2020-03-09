@@ -514,6 +514,30 @@ void specialKeyInputFunc(int key, int x, int y)
 	glutPostRedisplay();
 }
 
+void focusOnFrontView() {
+	mat4 rY = mat4(cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		-sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
+		0.0, 0.0, 0.0, 1.0);
+	point4 rotatingEye = rY * point4(-0.4, 0.4, -10.0, 1.0);
+	point4 rotatingAt = rY * point4(0.0, 0.0, -1, 1.0);
+
+	eye.z = station_coord.z - 5; // 5 equals to r of space station
+	eye.y = station_coord.y;
+	eye.x = station_coord.x;
+	at.z = eye.z - 1;
+	at.y = station_coord.y;
+	at.x = station_coord.x;
+
+	eye.x += rotatingEye.x;
+	eye.y += rotatingEye.y;
+	eye.z += rotatingEye.z;
+	at = eye;
+	at.x += rotatingAt.x;
+	at.y += rotatingAt.y;
+	at.z += rotatingAt.z;
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
@@ -553,12 +577,7 @@ void keyboard(unsigned char key, int x, int y)
 		break;
 	case 's': case 'S':
 		ViewMode = ViewMode2;
-		eye.z = station_coord.z - 5; // 5 equals to r of space station
-		eye.y = station_coord.y;
-		eye.x = station_coord.x;
-		at.z = eye.z - 1;
-		at.y = station_coord.y;
-		at.x = station_coord.x;
+		focusOnFrontView();
 		break;
 	case 't': case 'T':
 		ViewMode = ViewMode3;
@@ -632,29 +651,7 @@ void rotateSpaceStation(int id)
 		rotatingDegreeSpaceStation += angularSpeed;
 
 		if (ViewMode == ViewMode2) {
-
-			mat4 rY = mat4(cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
-				0.0, 1.0, 0.0, 0.0,
-				-sin(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0, cos(-rotatingDegreeSpaceStation * DegreesToRadians), 0.0,
-				0.0, 0.0, 0.0, 1.0);
-			point4 rotatingEye = rY * point4(-0.4, 0.4, -10.0, 1.0);
-			point4 rotatingAt = rY * point4(0.0, 0.0, -1, 1.0);
-
-			eye.z = station_coord.z - 5; // 5 equals to r of space station
-			eye.y = station_coord.y;
-			eye.x = station_coord.x;
-			at.z = eye.z - 1;
-			at.y = station_coord.y;
-			at.x = station_coord.x;
-
-			eye.x += rotatingEye.x;
-			eye.y += rotatingEye.y;
-			eye.z += rotatingEye.z;
-			at = eye;
-			at.x += rotatingAt.x;
-			at.y += rotatingAt.y;
-			at.z += rotatingAt.z;
-
+			focusOnFrontView();
 		}
 	}
 
