@@ -10,7 +10,7 @@ Spaceship: Drawn as a union of two tori (plural of torus).
 
 Planets: Drawn as colorful spheres with white circles.
 
-Space Station: Drawn as a grey sphere.
+Space Station: Drawn as a grey sphere. Moreover it turns around itself.
 
 Compass: Drawn as a tetrahedron.
 
@@ -22,17 +22,25 @@ The ground lies along the x-z plane and the y axis points up. So in the beginnin
 
 By pressing '**c**',  the camera will set up to front of the spaceship and you can find your direction by looking up the tetrahedrons's(Compass) direction.
 
+<img src="https://media.giphy.com/media/cKWa9gqujmhl7ClUW1/giphy.gif" width="500" height="300" />
+
 **View Mode 2**
 
 By pressing '**s**', the camera will set up to front of the space station, so you can see the planetary system by the space station's front(pink square).
+
+<img src="https://media.giphy.com/media/XBd67avJLcnEADCsNN/giphy.gif" width="500" height="300" />
 
 **View Mode 3**
 
 By pressing '**t**', the camera will set up to slightly up and back of the spaceship, so you can see space as well as the ship.
 
+<img src="https://media.giphy.com/media/PiolpDvUjHGGkhijMw/giphy.gif" width="500" height="300" />
+
 **View Mode 4**
 
 By pressing '**w**', the camera will set up to LARGE_Y position, so you can see the whole planet system, spaceship and space station by top view.
+
+<img src="https://media.giphy.com/media/J4yC6UkA5Iqhq1ngWB/giphy.gif" width="500" height="300" />
 
 ### Other Capabilities
 **Spaceship Mobility**
@@ -40,6 +48,9 @@ By pressing '**w**', the camera will set up to LARGE_Y position, so you can see 
 - By pressing '**Right Arrow**', the ship and the compass(tetrahedron) will slightly turn to right and move that direction.
 - By pressing '**Up Arrow**', the ship will move up slightly. If you are in down direction and press to up arrow, then ships' velocity vector's *y* value will be 0.
 - By pressing '**Down Arrow**', the ship will move down slightly. If you are in up direction and press to down arrow, then ships' velocity vector's *y* value will be 0.
+
+<img src="https://media.giphy.com/media/YSZGDDU1pabSqTCwyo/giphy.gif" width="400" height="200" /> <img src="https://media.giphy.com/media/ZFLfoIBfqQrUuJ2lf3/giphy.gif" width="400" height="200" /> 
+<img src="https://media.giphy.com/media/eJRV0s3cq9R9eyh6dy/giphy.gif" width="400" height="200" /> <img src="https://media.giphy.com/media/Xya9JL1caSzJA2Z5ij/giphy.gif" width="400" height="200" />
 
 **Spaceship Speed**
 - By pressing '**d**', the speed of the ship will increase.
